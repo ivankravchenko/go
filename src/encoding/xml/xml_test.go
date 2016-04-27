@@ -797,3 +797,69 @@ func TestIssue12417(t *testing.T) {
 		}
 	}
 }
+
+func TestNestedAttr(t *testing.T) {
+	input := `
+<rules version="1.0.1">
+	<configuration>
+		<ab name="ab test name" variations="5"/>
+		<example>example content</example>
+	</configuration>
+</rules>`
+	type A struct {
+		XMLName      Name   `xml:"rules"`
+		Version      string `xml:"version,attr"`
+		AbName       string `xml:"configuration>ab>name,attr"`
+		AbVariations int    `xml:"configuration>ab>variations,attr"`
+		Example      string `xml:"configuration>example"`
+	}
+	expectedA := A{
+		XMLName: Name{"", "rules"},
+		Version: "1.0.1",
+		AbName: "ab test name",
+		AbVariations: 5,
+		Example: "example content",
+	}
+
+	var a A
+	err := Unmarshal([]byte(input), &a)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(a, expectedA) {
+		t.Errorf("have %+v want %+v", a, expectedA)
+	}
+}
+
+func TestNestedAttrList(t *testing.T) {
+	input := `
+<output>
+	<example>example content</example>
+	<members>
+		<member id="1"/>
+		<member id="13"/>
+		<member id="5"/>
+	</members>
+</output>`
+	type A struct {
+		XMLName Name   `xml:"output"`
+		Example string `xml:"example"`
+		Members []int  `xml:"members>member>id,attr"`
+	}
+	expectedA := A{
+		XMLName: Name{"", "output"},
+		Example: "example content",
+		Members: []int{1, 13, 5},
+	}
+
+	var a A
+	err := Unmarshal([]byte(input), &a)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(a, expectedA) {
+		t.Errorf("have %+v want %+v", a, expectedA)
+	}
+}

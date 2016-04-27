@@ -614,6 +614,51 @@ func (p *Decoder) unmarshalPath(tinfo *typeInfo, sv reflect.Value, parents []str
 Loop:
 	for i := range tinfo.fields {
 		finfo := &tinfo.fields[i]
+		if finfo.flags&fAttr != 0 {
+			if len(finfo.parents) > len(parents) + 1 {
+				recurse = true
+				parents = finfo.parents[:len(parents)+1]
+			} else if len(finfo.parents) == len(parents) + 1 {
+				for _, a := range start.Attr {
+					if a.Name.Local == finfo.name {
+						v := sv.FieldByIndex(finfo.idx)
+						switch v.Kind() {
+						case reflect.Bool, reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr, reflect.String:
+							copyValue(v, []byte(a.Value))
+							continue Loop
+						case reflect.Slice:
+							typ := v.Type()
+							if typ.Elem().Kind() == reflect.Uint8 {
+								// []byte
+								copyValue(v, []byte(a.Value))
+								continue Loop
+							}
+
+							// Slice of element values.
+							// Grow slice.
+							n := v.Len()
+							if n >= v.Cap() {
+								ncap := 2 * n
+								if ncap < 4 {
+									ncap = 4
+								}
+								new := reflect.MakeSlice(typ, n, ncap)
+								reflect.Copy(new, v)
+								v.Set(new)
+							}
+							v.SetLen(n + 1)
+
+							// Recur to read element into slice.
+							copyValue(v.Index(n), []byte(a.Value))
+							continue Loop
+
+						default:
+							return false, errors.New("unknown type " + v.Type().String())
+						}
+					}
+				}
+			}
+		}
 		if finfo.flags&fElement == 0 || len(finfo.parents) < len(parents) || finfo.xmlns != "" && finfo.xmlns != start.Name.Space {
 			continue
 		}

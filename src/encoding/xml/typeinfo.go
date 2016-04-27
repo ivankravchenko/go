@@ -207,7 +207,7 @@ func structFieldInfo(typ reflect.Type, f *reflect.StructField) (*fieldInfo, erro
 	}
 	finfo.name = parents[len(parents)-1]
 	if len(parents) > 1 {
-		if (finfo.flags & fElement) == 0 {
+		if (finfo.flags & (fElement | fAttr)) == 0 {
 			return nil, fmt.Errorf("xml: %s chain not valid with %s flag", tag, strings.Join(tokens[1:], ","))
 		}
 		finfo.parents = parents[:len(parents)-1]
