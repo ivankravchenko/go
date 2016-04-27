@@ -830,6 +830,15 @@ func TestNestedAttr(t *testing.T) {
 	if !reflect.DeepEqual(a, expectedA) {
 		t.Errorf("have %+v want %+v", a, expectedA)
 	}
+
+	output, err := MarshalIndent(expectedA, "", "	")
+	if err != nil {
+		t.Errorf("error: %v\n", err)
+	}
+
+	if strings.TrimSpace(string(output)) != strings.TrimSpace(input) {
+		t.Errorf("have %+v want %+v", string(output), input)
+	}
 }
 
 func TestNestedAttrList(t *testing.T) {
@@ -861,5 +870,14 @@ func TestNestedAttrList(t *testing.T) {
 	}
 	if !reflect.DeepEqual(a, expectedA) {
 		t.Errorf("have %+v want %+v", a, expectedA)
+	}
+
+	output, err := MarshalIndent(expectedA, "", "	")
+	if err != nil {
+		t.Errorf("error: %v\n", err)
+	}
+
+	if strings.TrimSpace(string(output)) != strings.TrimSpace(input) {
+		t.Errorf("have %+v want %+v", string(output), input)
 	}
 }
