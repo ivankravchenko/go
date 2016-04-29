@@ -885,6 +885,18 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 				continue
 			}
 
+		case fAttr:
+			if err := s.trim(finfo.parents); err != nil {
+				return err
+			}
+			if len(finfo.parents) > len(s.stack) {
+				if vf.Kind() != reflect.Ptr && vf.Kind() != reflect.Interface || !vf.IsNil() {
+					if err := s.push(finfo.parents[len(s.stack):]); err != nil {
+						return err
+					}
+				}
+			}
+
 		case fElement, fElement | fAny:
 			if err := s.trim(finfo.parents); err != nil {
 				return err
