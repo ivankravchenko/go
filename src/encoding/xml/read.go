@@ -611,6 +611,7 @@ func copyValue(dst reflect.Value, src []byte) (err error) {
 // still untouched because start is uninteresting for sv's fields.
 func (p *Decoder) unmarshalPath(tinfo *typeInfo, sv reflect.Value, parents []string, start *StartElement) (consumed bool, err error) {
 	recurse := false
+	var perfectMatch *reflect.Value
 Loop:
 	for i := range tinfo.fields {
 		finfo := &tinfo.fields[i]
@@ -668,8 +669,8 @@ Loop:
 			}
 		}
 		if len(finfo.parents) == len(parents) && finfo.name == start.Name.Local {
-			// It's a perfect match, unmarshal the field.
-			return true, p.unmarshal(finfo.value(sv), start)
+			v := finfo.value(sv)
+			perfectMatch = &v
 		}
 		if len(finfo.parents) > len(parents) && finfo.parents[len(parents)] == start.Name.Local {
 			// It's a prefix for the field. Break and recurse
@@ -683,6 +684,12 @@ Loop:
 			break
 		}
 	}
+
+	// It's a perfect match, unmarshal the field.
+	if perfectMatch != nil {
+		return true, p.unmarshal(*perfectMatch, start)
+	}
+
 	if !recurse {
 		// We have no business with this element.
 		return false, nil

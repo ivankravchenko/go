@@ -803,7 +803,7 @@ func TestNestedAttr(t *testing.T) {
 <rules version="1.0.1">
 	<configuration>
 		<ab name="ab test name" variations="5"/>
-		<example>example content</example>
+		<example foo="bar">example content</example>
 	</configuration>
 </rules>`
 	type A struct {
@@ -812,6 +812,7 @@ func TestNestedAttr(t *testing.T) {
 		AbName       string `xml:"configuration>ab>name,attr"`
 		AbVariations int    `xml:"configuration>ab>variations,attr"`
 		Example      string `xml:"configuration>example"`
+		Foo          string `xml:"configuration>example>foo,attr"`
 	}
 	expectedA := A{
 		XMLName: Name{"", "rules"},
@@ -819,6 +820,7 @@ func TestNestedAttr(t *testing.T) {
 		AbName: "ab test name",
 		AbVariations: 5,
 		Example: "example content",
+		Foo: "bar",
 	}
 
 	var a A
